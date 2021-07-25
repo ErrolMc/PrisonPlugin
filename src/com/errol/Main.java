@@ -71,7 +71,7 @@ public class Main extends JavaPlugin implements Listener
 				if (other != null && other.isOnline()) 
 				{
 					int amount = StaticUtils.ParseInt(args[1]); 
-					if (amount != -1) 
+					if (amount > 0) 
 					{
 						Player player = Bukkit.getPlayer(sender.getName());
 						UUID uuid = player.getUniqueId();
