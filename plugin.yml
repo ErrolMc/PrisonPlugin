@@ -1,0 +1,27 @@
+name: Prison
+main: com.errol.Main
+version: 0.02
+author: Errol
+commands:
+  prison:
+    description: all commands prison
+    usage: /prison
+  pay:
+    description: pay someone money
+    usage: /pay [username] [amount]
+  tpay:
+    description: pay someone tokens
+    usage: /tpay [username] [amount]
+  setmoney:
+    description: sets someones money
+    usage: /setmoney [username] [amount]
+  addmoney:
+    description: adds someones money
+    usage: /addmoney [username] [amount]
+  takemoney:
+    description: takes someones money
+    usage: /addmoney [username] [amount]
+  bal:
+    description: gets balance of player
+    usage: /bal [username]
+   
