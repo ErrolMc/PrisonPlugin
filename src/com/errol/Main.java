@@ -15,6 +15,8 @@ public class Main extends JavaPlugin implements Listener
 {
 	public MySQL SQL;
 	public SQLGetter data;
+	public MoneyManager moneyManager;
+	public RankManager rankManager;
 	
 	public void onEnable() 
 	{
@@ -25,6 +27,8 @@ public class Main extends JavaPlugin implements Listener
 	{
 		SQL = new MySQL();
 		data = new SQLGetter(this);
+		moneyManager = new MoneyManager(this);
+		rankManager = new RankManager(this);
 		
 		try {
 			SQL.Connect();
@@ -70,18 +74,18 @@ public class Main extends JavaPlugin implements Listener
 				Player other = Bukkit.getPlayer(args[0].toLowerCase());
 				if (other != null && other.isOnline()) 
 				{
-					int amount = StaticUtils.ParseInt(args[1]); 
+					long amount = StaticUtils.ParseLong(args[1]); 
 					if (amount > 0) 
 					{
 						Player player = Bukkit.getPlayer(sender.getName());
 						UUID uuid = player.getUniqueId();
-						int playerMoney = data.GetMoney(uuid);
+						long playerMoney = moneyManager.GetMoney(uuid);
 						
 						if (playerMoney >= amount) 
 						{
 							UUID otherUUID = other.getUniqueId();
-							data.AddMoney(otherUUID, amount);
-							data.TakeMoney(uuid, amount);
+							moneyManager.AddMoney(otherUUID, amount);
+							moneyManager.TakeMoney(uuid, amount);
 							
 							player.sendMessage("Server > Payed $" + amount + " to " + other.getName());
 							other.sendMessage("Server > Recieved $" + amount + " from " + player.getName());
@@ -105,10 +109,10 @@ public class Main extends JavaPlugin implements Listener
 					Player other = Bukkit.getPlayer(args[0].toLowerCase());
 					if (other != null && other.isOnline()) 
 					{
-						int amount = StaticUtils.ParseInt(args[1]); 
+						long amount = StaticUtils.ParseLong(args[1]); 
 						if (amount != -1) 
 						{
-							data.SetMoney(other.getUniqueId(), amount);
+							moneyManager.SetMoney(other.getUniqueId(), amount);
 							
 							player.sendMessage("Server > Set the balance of " + other.getName() + " to $" + amount);
 							other.sendMessage("Server > Your balance has been set to $" + amount);
@@ -135,9 +139,9 @@ public class Main extends JavaPlugin implements Listener
 						int amount = StaticUtils.ParseInt(args[1]); 
 						if (amount != -1) 
 						{
-							data.AddMoney(other.getUniqueId(), amount);
+							moneyManager.AddMoney(other.getUniqueId(), amount);
 							
-							int curMoney = data.GetMoney(other.getUniqueId());
+							long curMoney = moneyManager.GetMoney(other.getUniqueId());
 							player.sendMessage("Server > Added $" + amount + " to " + other.getName() + "'s balance making it $" + curMoney);
 							other.sendMessage("Server > Added $" + amount + " to your balance making it $" + curMoney);
 							
@@ -163,9 +167,9 @@ public class Main extends JavaPlugin implements Listener
 						int amount = StaticUtils.ParseInt(args[1]); 
 						if (amount != -1) 
 						{
-							data.TakeMoney(other.getUniqueId(), amount);
+							moneyManager.TakeMoney(other.getUniqueId(), amount);
 							
-							int curMoney = data.GetMoney(other.getUniqueId());
+							long curMoney = moneyManager.GetMoney(other.getUniqueId());
 							
 							player.sendMessage("Server > Taken $" + amount + " from " + other.getName() + "'s balance making it $" + curMoney);
 							other.sendMessage("Server > Taken $" + amount + " from your balance making it $" + curMoney);
@@ -190,13 +194,25 @@ public class Main extends JavaPlugin implements Listener
 			{
 				Player player = Bukkit.getPlayer(sender.getName());
 				
-				int money = data.GetMoney(targetPlayer.getUniqueId());
+				long money = moneyManager.GetMoney(targetPlayer.getUniqueId());
 				player.sendMessage("Server > The balance of " + targetName + " is $" + money);
 				
 				return true;
 			}
 
 			sender.sendMessage("Server > usage: /bal [username]");
+		}
+		
+		if (commandName.equals("rankup")) 
+		{
+			rankManager.TryRankup(Bukkit.getPlayer(sender.getName()));
+			return true;
+		}
+		
+		if (commandName.equals("rank")) 
+		{
+			rankManager.LogRank(Bukkit.getPlayer(sender.getName()));
+			return true;
 		}
 
 		return true;

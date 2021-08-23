@@ -15,4 +15,18 @@ public class StaticUtils
 		}
 		return -1;
 	}
+	
+	public static long ParseLong(String str) 
+	{
+		try 
+		{
+			long num = Long.parseLong(str);
+			return num;
+		}
+		catch (NumberFormatException ex) 
+		{ 
+			// not a number
+		}
+		return -1;
+	}
 }

@@ -2,6 +2,7 @@ name: Prison
 main: com.errol.Main
 version: 0.02
 author: Errol
+softdepend: [Vault] 
 commands:
   prison:
     description: all commands prison
@@ -9,6 +10,12 @@ commands:
   pay:
     description: pay someone money
     usage: /pay [username] [amount]
+  rank:
+    description: look at rank
+    usage: /rank
+  rankup:
+    description: rankup
+    usage: /rankup
   tpay:
     description: pay someone tokens
     usage: /tpay [username] [amount]
