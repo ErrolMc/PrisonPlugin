@@ -22,7 +22,7 @@ class Rank
 	{
 		this.tag = tag;
 		this.cost = cost;
-		this.max = false;
+		this.max = max;
 	}
 }
 
@@ -82,7 +82,7 @@ public class RankManager
 
     	if (rank.max)
     	{
-    		player.sendMessage("You are the max rank!");
+    		player.sendMessage("You cannot rankup because you are the max rank!");
     	}
     	else if (money >= next.cost)
     	{
@@ -106,8 +106,11 @@ public class RankManager
     	Rank next = NextRank(rank);
     	long money = plugin.moneyManager.GetMoney(player.getUniqueId());
     	long diff = next.cost - money;
-    	
-		player.sendMessage("Your rank is " + rank.tag + ", you need " + diff + " more to rank up to " + next.tag);
+
+    	if (rank.max)
+    		player.sendMessage("You are the max rank! (" + rank.tag + ")");
+    	else
+    		player.sendMessage("Your rank is " + rank.tag + ", you need " + diff + " more to rank up to " + next.tag);
     }
     
     private Rank GetRank(Player player) 
