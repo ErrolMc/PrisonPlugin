@@ -26,6 +26,30 @@ class Rank
 	}
 }
 
+class Prestige
+{
+	public String tag;
+	public long cost;
+	public float multiplier;
+	public boolean max;
+	
+	public Prestige(String tag, long cost, float multiplier) 
+	{
+		this.tag = tag;
+		this.cost = cost;
+		this.multiplier = multiplier;
+		this.max = false;
+	}
+	
+	public Prestige(String tag, long cost, float multiplier, boolean max) 
+	{
+		this.tag = tag;
+		this.cost = cost;
+		this.multiplier = multiplier;
+		this.max = max;
+	}
+}
+
 public class RankManager
 {
 	private Main plugin;
@@ -59,6 +83,21 @@ public class RankManager
 		new Rank("x", 240),
 		new Rank("y", 250),
 		new Rank("z", 260, true),
+	};
+	
+	public static Prestige[] prestiges = 
+	{
+		new Prestige("p0", 0, 1),
+		new Prestige("p1", 10000, 1),
+		new Prestige("p2", 20000, 1.1f),
+		new Prestige("p3", 30000, 1.2f),
+		new Prestige("p4", 40000, 1.3f),
+		new Prestige("p5", 50000, 1.4f),
+		new Prestige("p6", 60000, 1.5f),
+		new Prestige("p7", 70000, 1.6f),
+		new Prestige("p8", 80000, 1.7f),
+		new Prestige("p9", 90000, 1.8f),
+		new Prestige("p10", 100000, 1.9f, true),
 	};
 	
 	public RankManager(Main plugin) 
@@ -100,6 +139,46 @@ public class RankManager
     	}
     }
     
+    public void TryPrestige(Player player) 
+    {
+    	Rank rank = GetRank(player);
+    	Prestige prestige = GetPrestige(player);
+    	Prestige next = NextPrestige(prestige);
+    	long money = plugin.moneyManager.GetMoney(player.getUniqueId());
+
+    	if (rank.max) 
+    	{
+        	if (prestige.max) 
+        	{
+        		player.sendMessage("You cannot prestige because you are the max prestige!");
+        	}
+        	else if (money >= next.cost)
+        	{
+        		plugin.moneyManager.TakeMoney(player.getUniqueId(), next.cost);
+        		
+        		if (perms.playerInGroup(player, prestige.tag))
+        			perms.playerRemoveGroup(player, prestige.tag); // remove cur prestige
+        		if (perms.playerInGroup(player, rank.tag))
+        			perms.playerRemoveGroup(player, rank.tag); // remove rank z
+        		
+        		perms.playerAddGroup(player, next.tag); // next prestige
+        		perms.playerAddGroup(player, ranks[0].tag); // a
+        		
+        		player.sendMessage("Prestiged up from " + prestige.tag + " to " + next.tag);
+        	} 
+        	else 
+        	{
+        		long diff = next.cost - money;
+        		player.sendMessage("You need " + diff + " to prestige from " + prestige.tag + " to " + next.tag);
+        	}
+        }
+    	else 
+    	{
+    		player.sendMessage("You cannot prestige because arent the max rank!");
+    	}
+	}
+    
+    
     public void LogRank(Player player) 
     {
     	Rank rank = GetRank(player);
@@ -134,5 +213,28 @@ public class RankManager
     		}
     	}
     	return ranks[0];
+    }
+    
+    private Prestige GetPrestige(Player player) 
+    {
+    	for (int i = prestiges.length - 1; i > 0; i--)
+    	{
+    		if (perms.playerInGroup(player, prestiges[i].tag))
+    			return prestiges[i];
+    	}
+    	return prestiges[0];
+    }
+    
+    private Prestige NextPrestige(Prestige prestige) 
+    {
+    	for (int i = prestiges.length - 1; i >= 0; i--)
+    	{
+    		if (prestiges[i].tag == prestige.tag) 
+    		{
+    			if (i + 1 < prestiges.length)
+    				return prestiges[i + 1];	
+    		}
+    	}
+    	return prestiges[0];
     }
 }

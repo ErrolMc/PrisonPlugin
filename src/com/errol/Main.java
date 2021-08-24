@@ -215,6 +215,12 @@ public class Main extends JavaPlugin implements Listener
 			return true;
 		}
 
+		if (commandName.equals("prestige")) 
+		{
+			rankManager.TryPrestige(Bukkit.getPlayer(sender.getName()));
+			return true;
+		}
+		
 		return true;
 	}
 	

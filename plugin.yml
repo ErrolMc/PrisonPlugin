@@ -16,6 +16,9 @@ commands:
   rankup:
     description: rankup
     usage: /rankup
+  prestige:
+    description: prestige
+    usage: /prestige
   tpay:
     description: pay someone tokens
     usage: /tpay [username] [amount]
