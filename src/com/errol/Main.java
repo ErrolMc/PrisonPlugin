@@ -17,6 +17,7 @@ public class Main extends JavaPlugin implements Listener
 	public SQLGetter data;
 	public MoneyManager moneyManager;
 	public RankManager rankManager;
+	public MineManager mineManager;
 	
 	public void onEnable() 
 	{
@@ -29,6 +30,7 @@ public class Main extends JavaPlugin implements Listener
 		data = new SQLGetter(this);
 		moneyManager = new MoneyManager(this);
 		rankManager = new RankManager(this);
+		mineManager = new MineManager(this);
 		
 		try {
 			SQL.Connect();
@@ -218,6 +220,12 @@ public class Main extends JavaPlugin implements Listener
 		if (commandName.equals("prestige")) 
 		{
 			rankManager.TryPrestige(Bukkit.getPlayer(sender.getName()));
+			return true;
+		}
+		
+		if (commandName.equals("mine")) 
+		{
+			mineManager.HandleCommand(Bukkit.getPlayer(sender.getName()), args);
 			return true;
 		}
 		

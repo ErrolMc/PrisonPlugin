@@ -34,4 +34,7 @@ commands:
   bal:
     description: gets balance of player
     usage: /bal [username]
+  mine:
+    description: base command for mines
+    usage: /mine
    
