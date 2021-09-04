@@ -12,8 +12,16 @@ public class StaticUtils
 		catch (NumberFormatException ex) 
 		{ 
 			// not a number
+			return -1;
 		}
-		return -1;
+	}
+	
+	public static int ParseInt(String str, int _default) 
+	{
+		int num = ParseInt(str);
+		if (num == -1)
+			return _default;
+		return num;
 	}
 	
 	public static long ParseLong(String str) 

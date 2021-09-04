@@ -9,6 +9,9 @@ import com.fasterxml.jackson.databind.*;
 import org.bukkit.World;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -35,39 +38,127 @@ class Vector3Int
 		this.y = y;
 		this.z = z;
 	}
-}
-
-class Mines
-{
-	public Mine[] mines;
 	
-	public void AddMine(Mine mine) 
+	public Vector3Int(String str) 
 	{
-		Mine[] newMines = new Mine[mines.length + 1];
-		newMines[mines.length] = mine;
-		for (int i = 0; i < mines.length; i++)
-			newMines[i] = mines[i];
-		mines = newMines;
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
+		
+		String[] arr = str.split(",");
+		if (arr.length > 0) 
+			this.x = StaticUtils.ParseInt(arr[0], 0);
+		if (arr.length > 1) 
+			this.y = StaticUtils.ParseInt(arr[1], 0);
+		if (arr.length > 2) 
+			this.z = StaticUtils.ParseInt(arr[2], 0);
 	}
+	
+    @Override
+    public String toString() 
+    {
+        return String.format(x + "," + y + "," + z);
+    }
 }
 
 class Mine
 {
 	public String name;
-	public Vector3Int[] blocks;
+	public ArrayList<Vector3Int> blocks;
 	
-	public Mine(String name, Vector3Int[] blocks) 
+	public Mine(String name) 
+	{
+		this.name = name;
+		this.blocks = null;
+	}
+	
+	public Mine(String name, ArrayList<Vector3Int> blocks) 
 	{
 		this.name = name;
 		this.blocks = blocks;
 	}
+}
+
+class Mines
+{
+	public ArrayList<Mine> mines;
 	
-	public Mine(String name, ArrayList<Vector3Int> blocksList) 
+    public Mines()
+    {
+    	Bukkit.getLogger().info("Mines");
+    	YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("mines.yml"));
+    	mines = new ArrayList<Mine>();
+    	
+    	if (config.contains("numMines")) 
+    	{
+        	int numMines = config.getInt("numMines");
+        	
+        	for (int i = 0; i < numMines; i++) 
+        	{
+        		Mine mine = new Mine(config.getString("m" + i + "name"));
+        		
+            	int numBlocks = config.getInt("m" + i + "numblocks");
+            	mine.blocks = new ArrayList<Vector3Int>();
+            	
+            	for (int j = 0; j < numBlocks; j++)
+        			mine.blocks.add(new Vector3Int(config.getString("m" + i + "b" + j)));
+            	
+            	mines.add(mine);
+        	}	
+        	
+
+        	Bukkit.getLogger().info("nummines " + numMines);
+    	}
+    }
+    
+    public boolean SaveToDisk()
+    {
+    	YamlConfiguration config = new YamlConfiguration();
+    	
+    	config.set("numMines", mines.size());
+    	for (int i = 0; i < mines.size(); i++) 
+    	{
+    		Mine mine = mines.get(i);
+    		
+    		config.set("m" + i + "name", mine.name);
+        	config.set("m" + i + "numblocks", mine.blocks.size());
+        	
+        	for (int j = 0; j < mine.blocks.size(); j++)
+        		config.set("m" + i + "b" + j, mine.blocks.get(i).toString());
+    	}
+    	
+    	File file = new File("mines.yml");
+    	
+        try
+        {
+        	config.save(file);
+        	return true;
+        }
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean ContainsMine(String name) 
+    {
+    	for (Mine mine : mines) 
+    	{
+    		if (mine.name.equalsIgnoreCase(name))
+    			return true;
+    	}
+    	return false;
+    }
+    
+	public boolean AddMine(Mine mine) 
 	{
-		this.name = name;
-		blocks = new Vector3Int[blocksList.size()];
-		for (int i = 0; i < blocks.length; i++) 
-			blocks[i] = blocksList.get(i);
+		if (ContainsMine(mine.name)) 
+			return false;
+
+		Bukkit.getLogger().info("blocks " + mine.blocks.size());
+		mines.add(mine);
+		return true;
 	}
 }
 
@@ -81,60 +172,93 @@ public class MineManager
 	public MineManager(Main plugin) 
 	{
 		this.plugin = plugin;
-		Bukkit.getLogger().info("Minemanager 5");
-		//worldEdit = (WorldEditPlugin) Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
-		//mines = GetMinesFromDisk();
+		worldEdit = (WorldEditPlugin) Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
+		mines = new Mines();
 	}
 	
 	public void HandleCommand(Player player, String[] args) 
 	{
 		if (args.length > 0) 
 		{
-			if (args[0] == "create") 
+			if (args[0].equalsIgnoreCase("create"))
 			{
-				if (args.length > 0) 
+				if (args.length > 1) 
 				{
 					String name = args[1];
-					
-					Selection selection = worldEdit.getSelection(player);
-					if (selection != null) 
+
+					if (!mines.ContainsMine(name)) 
 					{
-						World world = selection.getWorld();
-						Location min = selection.getMinimumPoint();
-						Location max = selection.getMaximumPoint();
-						
-						ArrayList<Vector3Int> blocks = new ArrayList<Vector3Int>();
-						for (int x = min.getBlockX(); x < max.getBlockX(); x++) 
+						Selection selection = worldEdit.getSelection(player);
+						if (selection != null) 
 						{
-							for (int y = min.getBlockY(); y < max.getBlockY(); x++) 
+							World world = selection.getWorld();
+							Location min = selection.getMinimumPoint();
+							Location max = selection.getMaximumPoint();
+
+							player.sendMessage(min.toString() + " + " + max.toString());
+							
+							ArrayList<Vector3Int> blocks = new ArrayList<Vector3Int>();
+							for (int x = min.getBlockX(); x <= max.getBlockX(); x++) 
 							{
-								for (int z = min.getBlockZ(); z < max.getBlockZ(); z++) 
+								for (int y = min.getBlockY(); y <= max.getBlockY(); y++) 
 								{
-									Block block = world.getBlockAt(x, y, z);
-									Material mat = block.getType();
-									
-									if (mat == Material.GOLD_BLOCK) 
+									for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) 
 									{
-										blocks.add(new Vector3Int(x, y, z));
+										Block block = world.getBlockAt(x, y, z);
+										Material mat = block.getType();
+										
+										if (mat == Material.GOLD_BLOCK) 
+											blocks.add(new Vector3Int(x, y, z));
 									}
 								}
 							}
-						}
-						
-						Mine mine = new Mine(name, blocks);
-						mines.AddMine(mine);
-						
-						boolean res = WriteMinesToDisk(mines);
-						if (res)
-							player.sendMessage("Server > Successfully created new mine " + name);
-						else
-							player.sendMessage("Server > Failed to save mine " + name);
-					} 
+
+							Mine mine = new Mine(name, blocks);
+							mine.blocks = blocks;
+							mines.AddMine(mine);
+
+							boolean res = mines.SaveToDisk();
+							if (res)
+								player.sendMessage("Server > Successfully created new mine " + name);
+							else
+								player.sendMessage("Server > Failed to save mine " + name);
+							
+						} 
+						else 
+						{
+							player.sendMessage("Please have a selection");
+						}	
+					}
 					else 
 					{
-						player.sendMessage("Please have a selection");
+						player.sendMessage("Mine " + name + " already exists!");
 					}
 				}
+			}
+			
+			if (args[0].equalsIgnoreCase("reload"))
+			{
+				mines = new Mines();
+				player.sendMessage("Reloaded mines! (" + mines.mines.size() + ")");
+			}
+			
+			if (args[0].equalsIgnoreCase("mines"))
+			{
+				int numMines = mines.mines.size();
+				
+				EStringBuilder res = new EStringBuilder();
+				res.AddLine("--- Mines ---");
+				res.AddLine("Amount: " + numMines);
+				
+				for (int i = 0; i < numMines; i++) 
+				{
+					Mine mine = mines.mines.get(i);
+					res.AddLine(mine.name + ": " + mine.blocks.size() + " blocks");
+				}
+				
+				res.Add("-------------");
+				
+				player.sendMessage(res.Text());
 			}
 			// define mine with gold blocks and worldedit
 			// mine with hard coded values
@@ -144,6 +268,7 @@ public class MineManager
 		}
 	}
 	
+	/*
 	Mines GetMinesFromDisk() 
 	{
 		try
@@ -220,4 +345,5 @@ public class MineManager
 			return false;
 		}
 	}
+	*/
 }

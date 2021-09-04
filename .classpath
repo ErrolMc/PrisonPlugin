@@ -13,7 +13,7 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Drive/Programming/Bukkit Jars/Vault.jar"/>
 	<classpathentry kind="lib" path="E:/Errol/Desktop/Minecraft/Plugins/worldguard-6.1.jar"/>
-	<classpathentry kind="lib" path="E:/Errol/Desktop/Minecraft/Plugins/worldedit-core-6.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="E:/Errol/Desktop/Minecraft/Plugins/worldedit-core-6.1.jar"/>
 	<classpathentry kind="lib" path="E:/Errol/Desktop/Minecraft/Plugins/jackson-core-2.9.9.jar"/>
 	<classpathentry kind="lib" path="E:/Errol/Desktop/Minecraft/Plugins/jackson-databind-2.9.9.jar"/>
 	<classpathentry kind="lib" path="C:/Drive/Programming/Bukkit Jars/worldedit-bukkit-6.1.9.jar"/>
