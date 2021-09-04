@@ -23,6 +23,7 @@ import java.util.*;
 
 import com.sk89q.worldedit.bukkit.*;
 import com.sk89q.worldedit.bukkit.selections.*;
+import com.sk89q.worldedit.internal.cui.SelectionMinMaxEvent;
 
 import org.bukkit.Location;
 
@@ -54,28 +55,52 @@ class Vector3Int
 			this.z = StaticUtils.ParseInt(arr[2], 0);
 	}
 	
+	public Vector3Int(Location loc) 
+	{
+		this.x = loc.getBlockX();
+		this.y = loc.getBlockY();
+		this.z = loc.getBlockZ();
+	}
+	
     @Override
     public String toString() 
     {
         return String.format(x + "," + y + "," + z);
+    }
+    
+    public static Vector3Int Zero()
+    { 
+		return new Vector3Int(0, 0, 0);
     }
 }
 
 class Mine
 {
 	public String name;
-	public ArrayList<Vector3Int> blocks;
+	public Vector3Int min;
+	public Vector3Int max;
 	
 	public Mine(String name) 
 	{
 		this.name = name;
-		this.blocks = null;
+		this.min = Vector3Int.Zero();
+		this.max = Vector3Int.Zero();
 	}
 	
-	public Mine(String name, ArrayList<Vector3Int> blocks) 
+	public Mine(String name, Vector3Int min, Vector3Int max) 
 	{
 		this.name = name;
-		this.blocks = blocks;
+		this.min = min;
+		this.max = max;
+	}
+	
+	public int NumBlocks() 
+	{
+		int x = max.x - min.x + 1;
+		int y = max.y - min.y + 1;
+		int z = max.z - min.z + 1;
+		
+		return Math.abs(x) * Math.abs(y) * Math.abs(z);
 	}
 }
 
@@ -95,19 +120,12 @@ class Mines
         	
         	for (int i = 0; i < numMines; i++) 
         	{
-        		Mine mine = new Mine(config.getString("m" + i + "name"));
-        		
-            	int numBlocks = config.getInt("m" + i + "numblocks");
-            	mine.blocks = new ArrayList<Vector3Int>();
-            	
-            	for (int j = 0; j < numBlocks; j++)
-        			mine.blocks.add(new Vector3Int(config.getString("m" + i + "b" + j)));
-            	
-            	mines.add(mine);
-        	}	
-        	
+        		String name = config.getString("m" + i + "name");
+        		Vector3Int min = new Vector3Int(config.getString("m" + i + "min"));
+        		Vector3Int max = new Vector3Int(config.getString("m" + i + "max"));
 
-        	Bukkit.getLogger().info("nummines " + numMines);
+            	mines.add(new Mine(name, min, max));
+        	}	
     	}
     }
     
@@ -121,10 +139,8 @@ class Mines
     		Mine mine = mines.get(i);
     		
     		config.set("m" + i + "name", mine.name);
-        	config.set("m" + i + "numblocks", mine.blocks.size());
-        	
-        	for (int j = 0; j < mine.blocks.size(); j++)
-        		config.set("m" + i + "b" + j, mine.blocks.get(i).toString());
+        	config.set("m" + i + "min", mine.min.toString());
+        	config.set("m" + i + "max", mine.max.toString());
     	}
     	
     	File file = new File("mines.yml");
@@ -156,7 +172,7 @@ class Mines
 		if (ContainsMine(mine.name)) 
 			return false;
 
-		Bukkit.getLogger().info("blocks " + mine.blocks.size());
+		Bukkit.getLogger().info("blocks " + mine.NumBlocks());
 		mines.add(mine);
 		return true;
 	}
@@ -192,29 +208,13 @@ public class MineManager
 						if (selection != null) 
 						{
 							World world = selection.getWorld();
-							Location min = selection.getMinimumPoint();
-							Location max = selection.getMaximumPoint();
+							Location minLoc = selection.getMinimumPoint();
+							Location maxLoc = selection.getMaximumPoint();
 
-							player.sendMessage(min.toString() + " + " + max.toString());
-							
-							ArrayList<Vector3Int> blocks = new ArrayList<Vector3Int>();
-							for (int x = min.getBlockX(); x <= max.getBlockX(); x++) 
-							{
-								for (int y = min.getBlockY(); y <= max.getBlockY(); y++) 
-								{
-									for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) 
-									{
-										Block block = world.getBlockAt(x, y, z);
-										Material mat = block.getType();
-										
-										if (mat == Material.GOLD_BLOCK) 
-											blocks.add(new Vector3Int(x, y, z));
-									}
-								}
-							}
+							Vector3Int min = new Vector3Int(minLoc);
+							Vector3Int max = new Vector3Int(maxLoc);
 
-							Mine mine = new Mine(name, blocks);
-							mine.blocks = blocks;
+							Mine mine = new Mine(name, min, max);
 							mines.AddMine(mine);
 
 							boolean res = mines.SaveToDisk();
@@ -253,97 +253,18 @@ public class MineManager
 				for (int i = 0; i < numMines; i++) 
 				{
 					Mine mine = mines.mines.get(i);
-					res.AddLine(mine.name + ": " + mine.blocks.size() + " blocks");
+					res.AddLine(mine.name + ": " + mine.NumBlocks() + " blocks");
 				}
 				
 				res.Add("-------------");
 				
 				player.sendMessage(res.Text());
 			}
-			// define mine with gold blocks and worldedit
+			
 			// mine with hard coded values
 			// /sell
 			// resets on timer or %
 			// /mine reset in region or /mine reset a
 		}
 	}
-	
-	/*
-	Mines GetMinesFromDisk() 
-	{
-		try
-		{
-			File logger = new File("/plugins/Prison/mines.txt");
-			if (logger.exists())
-			{
-	            FileReader fr = new FileReader(logger.getAbsoluteFile());
-	            BufferedReader br = new BufferedReader(fr);
-	            
-	            StringBuilder content = new StringBuilder();
-	            String line;
-	            while ((line = br.readLine()) != null) 
-	            {
-	                content.append(line);
-	                content.append(System.lineSeparator());
-	            }
-	            
-	            br.close();
-	            String json = content.toString();
-	                                  
-	            ObjectMapper mapper = new ObjectMapper();
-	    		try
-	    		{
-	    			Mines _mines = mapper.readValue(json, Mines.class);
-	    			return _mines;
-	    		}
-	    		catch (JsonProcessingException e) 
-	    		{
-	    			return new Mines();
-	    		}
-			}
-		} 
-		catch (IOException e) 
-		{
-			return new Mines();
-		}
-		
-		return new Mines();
-	}
-	
-	boolean WriteMinesToDisk(Mines _mines) 
-	{
-        File dir = new File("plugins/Prison");
-        if (!dir.exists())
-        	dir.mkdir();
-        
-        ObjectMapper mapper = new ObjectMapper();
-		try
-		{
-			String json = mapper.writeValueAsString(_mines);
-			
-	        try
-	        {
-	            File logger = new File("/plugins/Prison/mines.txt");
-	            if (!logger.exists())
-	                logger.createNewFile();
-
-	            FileWriter fw = new FileWriter(logger.getAbsoluteFile());
-	            BufferedWriter bw = new BufferedWriter(fw);
-	            
-	            bw.write(json);
-	            bw.close();
-	            
-	            return true;
-	        } 
-	        catch (IOException e) 
-	        {
-	        	return false;
-	        }
-		}
-		catch (JsonProcessingException e)
-		{
-			return false;
-		}
-	}
-	*/
 }
