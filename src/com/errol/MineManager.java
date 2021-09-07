@@ -3,6 +3,7 @@ package com.errol;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
@@ -101,14 +102,16 @@ class Mine
 		}
 	}
 	
+	// publics
 	public String name;
 	public Vector3Int min;
 	public Vector3Int max;
-	
+	public long timeBetweenResets = 20;
 	public ArrayList<BlockChance> blockChances;
 	
-	public long timeBetweenResets;
-	long lastResetTime;
+	// privates
+	private boolean resetting;
+	private long lastResetTime;
 
 	public Mine(String name) 
 	{
@@ -116,7 +119,8 @@ class Mine
 		this.min = Vector3Int.Zero();
 		this.max = Vector3Int.Zero();
 		
-		lastResetTime = Mines.seconds;
+		this.resetting = false;
+		this.lastResetTime = Mines.seconds;
 		InitChances();
 	}
 	
@@ -140,11 +144,14 @@ class Mine
 	
 	public boolean CanReset() 
 	{
-		return lastResetTime + timeBetweenResets > Mines.seconds;
+		if (resetting)
+			return false;
+		return Mines.seconds > lastResetTime + timeBetweenResets;
 	}
 	
 	public void Reset() 
 	{
+		resetting = true;
 		World world = Bukkit.getServer().getWorlds().get(0);
 
 		int totalBlocks = NumBlocks();
@@ -159,7 +166,6 @@ class Mine
 			BlockChance blockChance = blockChances.get(i);
 			int cur = (int)Math.ceil(totalBlocks * blockChance.chance);
 			
-			Bukkit.getLogger().info(blockChance.block.toString() + ": " + cur);
 			if (cur > blocksLeft)
 				cur = blocksLeft;
 			
@@ -182,6 +188,11 @@ class Mine
 				}
 			}
 		}
+		
+		lastResetTime = Mines.seconds;
+		resetting = false;
+		
+		Bukkit.getServer().broadcastMessage("[Mines] Mine " + name + " has been reset");
 	}
 	
 	public int NumBlocks() 
@@ -203,6 +214,8 @@ class Mines
 	public static long seconds = 0;
 	private int checkInterval = 1;
 	
+	private BukkitScheduler scheduler;
+	
     public Mines(Main plugin)
     {
     	YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("mines.yml"));
@@ -223,11 +236,13 @@ class Mines
     	}
 
     	// update the mines every second
-    	Bukkit.getServer().getScheduler().runTaskTimer(plugin, new Runnable() 
+    	scheduler = Bukkit.getServer().getScheduler();
+    	scheduler.runTaskTimer(plugin, new Runnable() 
     	{
 			@Override
 			public void run()
 			{
+				seconds++;
 				Update();
 			}
     	}, 0, 20 * checkInterval);
@@ -296,7 +311,13 @@ class Mines
 
 	public void Update()
 	{
-		seconds++;
+		for (Mine mine : mines) 
+		{
+			if (mine.CanReset()) 
+			{
+				mine.Reset();
+			}
+		}
 	}
 }
 
