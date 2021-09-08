@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.*;
 import org.bukkit.World;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
@@ -106,7 +107,7 @@ class Mine
 	public String name;
 	public Vector3Int min;
 	public Vector3Int max;
-	public long timeBetweenResets = 20;
+	public long timeBetweenResets = 60 * 5;
 	public ArrayList<BlockChance> blockChances;
 	
 	// privates
@@ -227,9 +228,11 @@ class Mines
         	
         	for (int i = 0; i < numMines; i++) 
         	{
-        		String name = config.getString("m" + i + "name");
-        		Vector3Int min = new Vector3Int(config.getString("m" + i + "min"));
-        		Vector3Int max = new Vector3Int(config.getString("m" + i + "max"));
+        		ConfigurationSection section = config.getConfigurationSection("m" + i);
+        		
+        		String name = section.getString("name");
+        		Vector3Int min = new Vector3Int(section.getString("min"));
+        		Vector3Int max = new Vector3Int(section.getString("max"));
 
             	mines.add(new Mine(name, min, max));
         	}	
@@ -257,9 +260,10 @@ class Mines
     	{
     		Mine mine = mines.get(i);
     		
-    		config.set("m" + i + "name", mine.name);
-        	config.set("m" + i + "min", mine.min.toString());
-        	config.set("m" + i + "max", mine.max.toString());
+    		ConfigurationSection section = config.createSection("m" + i);
+    		section.set("name", mine.name);
+    		section.set("min", mine.min.toString());
+    		section.set("max", mine.max.toString());
     	}
     	
     	File file = new File("mines.yml");
