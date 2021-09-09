@@ -219,6 +219,22 @@ class Mine
 		
 		return Math.abs(x) * Math.abs(y) * Math.abs(z);
 	}
+	
+	public void Clear() 
+	{
+		World world = Bukkit.getServer().getWorlds().get(0);
+		for (int x = min.x; x <= max.x; x++) 
+		{
+			for (int y = min.y; y <= max.y; y++) 
+			{
+				for (int z = min.z; z <= max.z; z++) 
+				{
+					Block block = world.getBlockAt(x, y, z);
+					block.setType(Material.AIR);
+				}
+			}
+		}
+	}
 }
 
 class Mines
@@ -385,6 +401,21 @@ class Mines
     	
     	Bukkit.getLogger().info("[Mines] Performing clean up!");
     }
+    
+    public boolean DeleteMine(String name) 
+    {
+		for (int i = 0; i < mines.size(); i++) 
+		{
+			Mine mine = mines.get(i);
+			if (mine.name.equalsIgnoreCase(name)) 
+			{
+				mine.Clear();
+				mines.remove(i);
+				return true;
+			}
+		}
+		return false;
+    }
 
 	public void Update()
 	{
@@ -503,10 +534,27 @@ public class MineManager
 				mines.ResetAll();
 				player.sendMessage("Resetting all mines! (" + mines.mines.size() + ")");
 			}
-			// mine with hard coded values
+			
+			if (args[0].equalsIgnoreCase("delete"))
+			{
+				if (args.length > 1) 
+				{
+					String name = args[1];
+					if (mines.DeleteMine(name)) 
+					{
+						mines.SaveToDisk();
+						player.sendMessage("Deleting " + name + " mine!");
+					}
+					else
+						player.sendMessage("Mine " + name + " doesnt exist!");
+				}
+				else
+					player.sendMessage("Please enter a mine to delete!");
+			}
+			
 			// /sell
-			// resets on timer or %
-			// /mine reset in region or /mine reset a
+			// resets on %
+			// /mine reset in region
 		}
 	}
 }
