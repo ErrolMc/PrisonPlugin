@@ -79,35 +79,35 @@ class Vector3Int
     }
 }
 
+class BlockChance implements Comparable<BlockChance>
+{
+	public Material block;
+	public double chance;
+	
+	public BlockChance(Material block, double chance) 
+	{
+		this.block = block;
+		this.chance = chance;
+	}
+
+	@Override
+	public int compareTo(BlockChance other)
+	{
+		if (chance == other.chance)
+			return 0;
+		if (chance > other.chance)
+			return 1;
+		return -1;
+	}
+}
+
 class Mine
 {	
-	class BlockChance implements Comparable<BlockChance>
-	{
-		public Material block;
-		public float chance;
-		
-		public BlockChance(Material block, float chance) 
-		{
-			this.block = block;
-			this.chance = chance;
-		}
-
-		@Override
-		public int compareTo(BlockChance other)
-		{
-			if (chance == other.chance)
-				return 0;
-			if (chance > other.chance)
-				return 1;
-			return -1;
-		}
-	}
-	
 	// publics
 	public String name;
 	public Vector3Int min;
 	public Vector3Int max;
-	public long timeBetweenResets = 60 * 5;
+	public long timeBetweenResets;
 	public ArrayList<BlockChance> blockChances;
 	
 	// privates
@@ -121,16 +121,10 @@ class Mine
 		this.max = Vector3Int.Zero();
 		
 		this.resetting = false;
+		this.timeBetweenResets = 600;
 		this.lastResetTime = Mines.seconds;
-		InitChances();
-	}
-	
-	void InitChances() 
-	{
-		blockChances = new ArrayList<BlockChance>();
-		blockChances.add(new BlockChance(Material.STONE, 0.85f));
-		blockChances.add(new BlockChance(Material.COBBLESTONE, 0.05f));
-		blockChances.add(new BlockChance(Material.COAL_ORE, 0.10f));
+		
+		this.blockChances = new ArrayList<BlockChance>();
 	}
 	
 	public Mine(String name, Vector3Int min, Vector3Int max) 
@@ -139,8 +133,10 @@ class Mine
 		this.min = min;
 		this.max = max;
 		
-		lastResetTime = Mines.seconds;
-		InitChances();
+		this.timeBetweenResets = 600;
+		this.lastResetTime = Mines.seconds;
+		
+		this.blockChances = new ArrayList<BlockChance>();
 	}
 	
 	public boolean CanReset() 
@@ -150,8 +146,26 @@ class Mine
 		return Mines.seconds > lastResetTime + timeBetweenResets;
 	}
 	
-	public void Reset() 
+	public void SetDefaultChances() 
 	{
+		if (blockChances != null)
+			blockChances.clear();
+		else
+			blockChances = new ArrayList<BlockChance>();
+		
+		blockChances.add(new BlockChance(Material.STONE, 70));
+		blockChances.add(new BlockChance(Material.COBBLESTONE, 20));
+		blockChances.add(new BlockChance(Material.COAL_ORE, 10));
+	}
+	
+	public void Reset(boolean log) 
+	{
+		if (blockChances.size() == 0)
+		{
+			Bukkit.getLogger().info("[Mines] Cant reset " + name + " as there arent any block chances");
+			return;
+		}
+			
 		resetting = true;
 		World world = Bukkit.getServer().getWorlds().get(0);
 
@@ -193,7 +207,8 @@ class Mine
 		lastResetTime = Mines.seconds;
 		resetting = false;
 		
-		Bukkit.getServer().broadcastMessage("[Mines] Mine " + name + " has been reset");
+		if (log)
+			Bukkit.getServer().broadcastMessage("[Mines] Mine " + name + " has been reset");
 	}
 	
 	public int NumBlocks() 
@@ -216,27 +231,55 @@ class Mines
 	private int checkInterval = 1;
 	
 	private BukkitScheduler scheduler;
-	
+
     public Mines(Main plugin)
     {
     	YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("mines.yml"));
     	mines = new ArrayList<Mine>();
     	
-    	if (config.contains("numMines")) 
+    	int i = 0;
+    	while (true)
     	{
-        	int numMines = config.getInt("numMines");
-        	
-        	for (int i = 0; i < numMines; i++) 
-        	{
+    		if (config.contains("m"+i)) 
+    		{
         		ConfigurationSection section = config.getConfigurationSection("m" + i);
         		
         		String name = section.getString("name");
         		Vector3Int min = new Vector3Int(section.getString("min"));
         		Vector3Int max = new Vector3Int(section.getString("max"));
-
-            	mines.add(new Mine(name, min, max));
-        	}	
-    	}
+        		
+        		Mine mine = new Mine(name, min, max);
+        		mine.timeBetweenResets = section.getLong("timebetweenresets");
+        		
+        		{
+            		ConfigurationSection blocks = section.getConfigurationSection("blocks");
+            		ConfigurationSection keys = blocks.getConfigurationSection("keys");
+            		ConfigurationSection values = blocks.getConfigurationSection("values");
+            		
+            		int j = 0;
+            		while (true) 
+            		{
+            			if (keys.contains(""+j)) 
+            			{
+                			String blockName = keys.getString(""+j);
+                			double chance = values.getDouble(""+j);
+                			
+                			BlockChance blockChance = new BlockChance(Material.valueOf(blockName), chance);
+                			mine.blockChances.add(blockChance);
+                			
+                			j++;
+            			}
+            			else
+            				break;
+            		}
+        		}	
+        		
+            	mines.add(mine);
+            	i++;
+    		}
+    		else
+    			break;
+    	}	
 
     	// update the mines every second
     	scheduler = Bukkit.getServer().getScheduler();
@@ -249,13 +292,14 @@ class Mines
 				Update();
 			}
     	}, 0, 20 * checkInterval);
+    	
+    	ResetAll();
     }
     
     public boolean SaveToDisk()
     {
     	YamlConfiguration config = new YamlConfiguration();
     	
-    	config.set("numMines", mines.size());
     	for (int i = 0; i < mines.size(); i++) 
     	{
     		Mine mine = mines.get(i);
@@ -264,6 +308,20 @@ class Mines
     		section.set("name", mine.name);
     		section.set("min", mine.min.toString());
     		section.set("max", mine.max.toString());
+    		section.set("timebetweenresets", mine.timeBetweenResets);
+    		
+    		{
+        		ConfigurationSection blocks = section.createSection("blocks");
+        		ConfigurationSection keys = blocks.createSection("keys");
+        		ConfigurationSection values = blocks.createSection("values");
+        		
+        		for (int j = 0; j < mine.blockChances.size(); j++) 
+        		{
+        			BlockChance blockChance = mine.blockChances.get(j);
+        			keys.set(""+j, blockChance.block.toString());
+        			values.set(""+j, blockChance.chance);
+        		}
+    		}
     	}
     	
     	File file = new File("mines.yml");
@@ -295,7 +353,6 @@ class Mines
 		if (ContainsMine(mine.name)) 
 			return false;
 
-		Bukkit.getLogger().info("blocks " + mine.NumBlocks());
 		mines.add(mine);
 		return true;
 	}
@@ -306,12 +363,28 @@ class Mines
 		{
 			if (mine.name.equalsIgnoreCase(name)) 
 			{
-				mine.Reset();
+				mine.Reset(true);
 				return true;
 			}
 		}
 		return false;
 	}
+	
+	public void ResetAll() 
+	{
+		for (Mine mine : mines) 
+		{
+			mine.Reset(false);	
+		}
+	}
+	
+    public void Cleanup() 
+    {
+    	scheduler.cancelAllTasks();
+    	mines.clear();
+    	
+    	Bukkit.getLogger().info("[Mines] Performing clean up!");
+    }
 
 	public void Update()
 	{
@@ -319,7 +392,7 @@ class Mines
 		{
 			if (mine.CanReset()) 
 			{
-				mine.Reset();
+				mine.Reset(true);
 			}
 		}
 	}
@@ -361,6 +434,8 @@ public class MineManager
 							Vector3Int max = new Vector3Int(maxLoc);
 
 							Mine mine = new Mine(name, min, max);
+							mine.SetDefaultChances();
+							mine.Reset(false);
 							mines.AddMine(mine);
 
 							boolean res = mines.SaveToDisk();
@@ -383,7 +458,10 @@ public class MineManager
 			
 			if (args[0].equalsIgnoreCase("reload"))
 			{
+				if (mines != null)
+					mines.Cleanup();
 				mines = new Mines(plugin);
+				mines.ResetAll();
 				player.sendMessage("Reloaded mines! (" + mines.mines.size() + ")");
 			}
 			
@@ -418,6 +496,12 @@ public class MineManager
 				}
 				else
 					player.sendMessage("Please enter a mine to reset!");
+			}
+			
+			if (args[0].equalsIgnoreCase("resetall"))
+			{
+				mines.ResetAll();
+				player.sendMessage("Resetting all mines! (" + mines.mines.size() + ")");
 			}
 			// mine with hard coded values
 			// /sell
