@@ -151,6 +151,33 @@ class Mine
 		return Math.abs(x) * Math.abs(y) * Math.abs(z);
 	}
 	
+	public double PercentMined(boolean left) 
+	{
+		int totalBlocks = NumBlocks();
+		int blocksRemoved = 0;
+		
+		for (int x = min.x; x <= max.x; x++) 
+		{
+			for (int y = min.y; y <= max.y; y++) 
+			{
+				for (int z = min.z; z <= max.z; z++) 
+				{
+					Block block = world.getBlockAt(x, y, z);
+					if (block.getType() == Material.AIR)
+						blocksRemoved++;
+				}
+			}
+		}
+		
+		double percentage = (double)(totalBlocks - blocksRemoved) / (double)totalBlocks;
+		percentage *= 100;
+		percentage = (double)Math.round(percentage * 100d) / 100d;
+		
+		if (left)
+			return percentage;
+		return 100 - percentage;
+	}
+	
 	public void AddSign(SignTemplate template, Sign sign)
 	{
 		MineSign mineSign = new MineSign(sign, template);
@@ -207,8 +234,11 @@ class Mine
 	{
 		for (MineSign sign : signs) 
 		{
-			if (sign.Type() == MineSign.SignType.TimeLeft)
+			MineSign.SignType type = sign.Type();
+			if (type == MineSign.SignType.TimeLeft)
 				sign.UpdateTime(TimeUntilReset());
+			else if (type == MineSign.SignType.PercentLeft) 
+				sign.UpdatePercentage(PercentMined(true));
 		}
 	}
 	

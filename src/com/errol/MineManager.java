@@ -149,23 +149,29 @@ public class MineManager
 				
 				if (StaticUtils.IsSign(block.getType())) 
 				{
-					Sign sign = (Sign)block.getState();
-					
-					if (args.length > 2) 
+					if (!mines.SignExists(new Vector3Int(block.getLocation()))) 
 					{
-						String type = args[1];
-						String name = args[2];
-						if (type.equalsIgnoreCase("sell")) 
+						Sign sign = (Sign)block.getState();
+						
+						if (args.length > 2) 
 						{
-							
-						}
-						else if (type.equalsIgnoreCase("percentage")) 
-						{
-							
-						}
-						else if (type.equalsIgnoreCase("time")) 
-						{
-							if (!mines.SignExists(new Vector3Int(block.getLocation()))) 
+							String type = args[1];
+							String name = args[2];
+							if (type.equalsIgnoreCase("sell")) 
+							{
+								
+							}
+							else if (type.equalsIgnoreCase("percent")) 
+							{
+								if (mines.AddSignToMine(name, MineSign.SignType.PercentLeft, sign)) 
+								{
+									mines.SaveToDisk();	
+									player.sendMessage("[Mines] Added " + type + " sign to " + name);
+								}
+								else 
+									player.sendMessage("[Mines] Couldnt add sign for some reason");
+							}
+							else if (type.equalsIgnoreCase("time")) 
 							{
 								if (mines.AddSignToMine(name, MineSign.SignType.TimeLeft, sign)) 
 								{
@@ -175,12 +181,14 @@ public class MineManager
 								else 
 									player.sendMessage("[Mines] Couldnt add sign for some reason");
 							}
-							else 
-								player.sendMessage("[Mines] Sign already exists here");
+							else
+								player.sendMessage("[Mines] Couldnt find type " + type);
 						}
+						else
+							player.sendMessage("Please enter a sign type and mine name");
 					}
-					else
-						player.sendMessage("Please enter a sign type and mine name");
+					else 
+						player.sendMessage("[Mines] Sign already exists here");
 				}
 				else
 					player.sendMessage("Please look at a sign");
