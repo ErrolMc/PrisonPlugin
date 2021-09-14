@@ -6,6 +6,9 @@ import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -15,16 +18,56 @@ class Mines
 	private Main plugin;
 	
 	public ArrayList<Mine> mines;
+	public ArrayList<SignTemplate> templateSigns;
 	
 	public static long seconds = 0;
-	private int checkInterval = 1;
+	private int checkInterval = 5; // seconds
 	
 	private BukkitScheduler scheduler;
 
-    public Mines(Main plugin)
+    public Mines(Main plugin, World world)
     {
-    	YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("mines.yml"));
+    	this.plugin = plugin;
+    	
+    	GetSignDataFromDisk();
+    	GetMinesFromDisk(world);
+
+    	// update the mines every second
+    	scheduler = Bukkit.getServer().getScheduler();
+    	scheduler.runTaskTimer(plugin, new Runnable() 
+    	{
+			@Override
+			public void run()
+			{
+				seconds += checkInterval;
+				Update();
+			}
+    	}, 0, 20 * checkInterval);
+    	
+    	ResetAll();
+    }
+    
+    void GetSignDataFromDisk() 
+    {
+    	YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("signs.yml"));
+    	
+    	templateSigns = new ArrayList<SignTemplate>();
+    	if (config.contains("PercentMined"))
+    		templateSigns.add(new SignTemplate(config.getConfigurationSection("PercentMined"), MineSign.SignType.PercentMined));
+    	if (config.contains("PercentLeft"))
+    		templateSigns.add(new SignTemplate(config.getConfigurationSection("PercentLeft"), MineSign.SignType.PercentLeft));
+    	if (config.contains("BlocksMined"))
+    		templateSigns.add(new SignTemplate(config.getConfigurationSection("BlocksMined"), MineSign.SignType.BlocksMined));
+    	if (config.contains("TimeLeft"))
+    		templateSigns.add(new SignTemplate(config.getConfigurationSection("TimeLeft"), MineSign.SignType.TimeLeft));
+    }
+    
+    void GetMinesFromDisk(World world) 
+    {
+    	Bukkit.getLogger().info("[Mines] Getting mines from disk in world " + world.getName());
     	mines = new ArrayList<Mine>();
+    	
+    	YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("mines.yml"));
     	
     	int i = 0;
     	while (true)
@@ -37,7 +80,7 @@ class Mines
         		Vector3Int min = new Vector3Int(section.getString("min"));
         		Vector3Int max = new Vector3Int(section.getString("max"));
         		
-        		Mine mine = new Mine(name, min, max);
+        		Mine mine = new Mine(name, min, max, world);
         		mine.timeBetweenResets = section.getLong("timebetweenresets");
         		
         		{
@@ -63,32 +106,47 @@ class Mines
             		}
         		}	
         		
+        		if (section.contains("signs"))
+        		{
+        			ConfigurationSection signs = section.getConfigurationSection("signs");
+        			
+        			int j = 0;
+        			while (true)
+        			{
+        				if (signs.contains("sign" + j)) 
+        				{
+            				ConfigurationSection signSection = signs.getConfigurationSection("sign" + j);
+            				
+            				Vector3Int position = new Vector3Int(signSection.getString("position"));
+            				MineSign.SignType type = MineSign.SignType.valueOf(signSection.getString("type"));
+            				
+            				Block block = world.getBlockAt(position.x, position.y, position.z);
+            				if (StaticUtils.IsSign(block.getType())) 
+            				{
+            					Sign sign = (Sign)block.getState();
+            					mine.AddSign(GetSignTemplate(type), sign);
+            				}
+            				else
+            					Bukkit.getLogger().info("[Mines] Cant find sign " + j + " for mine " +  mine.name);
+
+            				j++;	
+        				}
+        				else
+        					break;
+        			}
+        		}
+        		
             	mines.add(mine);
             	i++;
     		}
     		else
     			break;
     	}	
-
-    	// update the mines every second
-    	scheduler = Bukkit.getServer().getScheduler();
-    	scheduler.runTaskTimer(plugin, new Runnable() 
-    	{
-			@Override
-			public void run()
-			{
-				seconds++;
-				Update();
-			}
-    	}, 0, 20 * checkInterval);
-    	
-    	ResetAll();
     }
     
     public boolean SaveToDisk()
     {
     	YamlConfiguration config = new YamlConfiguration();
-    	
     	for (int i = 0; i < mines.size(); i++) 
     	{
     		Mine mine = mines.get(i);
@@ -111,10 +169,23 @@ class Mines
         			values.set(""+j, blockChance.chance);
         		}
     		}
+    		
+    		{
+    			ConfigurationSection signs = section.createSection("signs");
+    			for (int j = 0; j < mine.signs.size(); j++) 
+    			{
+    				ConfigurationSection signSection = signs.createSection("sign" + j);
+    				
+    				MineSign sign = mine.signs.get(j);
+
+    				signSection.set("position", sign.Position().toString());
+    				signSection.set("type", sign.Type().toString());
+    			}
+    		}
     	}
-    	
+  
+    	// mine file
     	File file = new File("mines.yml");
-    	
         try
         {
         	config.save(file);
@@ -159,6 +230,41 @@ class Mines
 		return false;
 	}
 	
+	public boolean AddSignToMine(String mineName, MineSign.SignType signType, Sign sign) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.name.equalsIgnoreCase(mineName)) 
+			{
+				mine.AddSign(GetSignTemplate(signType), sign);
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean SignExists(Vector3Int position) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.ContainsSign(position)) 
+				return true;
+		}
+		return false;
+	}
+	
+	public boolean DeleteSign(Vector3Int position) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.ContainsSign(position)) 
+			{
+				return mine.DeleteSign(position);	
+			}
+		}
+		return false;
+	}
+	
 	public void ResetAll() 
 	{
 		for (Mine mine : mines) 
@@ -170,9 +276,22 @@ class Mines
     public void Cleanup() 
     {
     	scheduler.cancelAllTasks();
-    	mines.clear();
     	
+		for (Mine mine : mines) 
+			mine.Cleanup();
+    	mines.clear();
+
     	Bukkit.getLogger().info("[Mines] Performing clean up!");
+    }
+    
+    public SignTemplate GetSignTemplate(MineSign.SignType type) 
+    {
+    	for (SignTemplate template : templateSigns) 
+    	{
+    		if (template.type == type)
+    			return template;
+    	}
+    	return new SignTemplate();
     }
     
     public boolean DeleteMine(String name) 
@@ -194,10 +313,8 @@ class Mines
 	{
 		for (Mine mine : mines) 
 		{
-			if (mine.CanReset()) 
-			{
-				mine.Reset(true);
-			}
+			mine.Tick();
 		}
 	}
 }
+

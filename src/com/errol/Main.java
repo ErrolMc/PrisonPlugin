@@ -3,11 +3,16 @@ package com.errol;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,6 +26,8 @@ public class Main extends JavaPlugin implements Listener
 	
 	public void onEnable() 
 	{
+		this.getServer().getPluginManager().registerEvents(this, this);
+		
 		SetupDatabase();
 	}
 	
@@ -42,7 +49,6 @@ public class Main extends JavaPlugin implements Listener
 		{
 			getLogger().info("Database is connected");
 			data.CreateTable();
-			this.getServer().getPluginManager().registerEvents(this, this);
 		}
 	}
 	
@@ -229,8 +235,44 @@ public class Main extends JavaPlugin implements Listener
 			return true;
 		}
 		
+		if (commandName.equals("sell") || commandName.equals("sellall")) 
+		{
+			mineManager.HandleSell(Bukkit.getPlayer(sender.getName()), commandName, args);
+			return true;
+		}
+		
 		return true;
 	}
+	
+    @EventHandler
+    public void onPlayerClickSign(PlayerInteractEvent event) 
+    {
+    	Block block = event.getClickedBlock();
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) 
+        {
+			if (StaticUtils.IsSign(block.getType())) 
+			{
+				Sign sign = (Sign) event.getClickedBlock().getState();
+				if (sign.getLine(0).contains("test")) 
+				{
+					
+				}
+			}
+        }
+    }
+    
+    @EventHandler
+    public void onBlockBreakEvent(BlockBreakEvent event) 
+    {
+		Block block = event.getBlock();
+		if (StaticUtils.IsSign(block.getType())) 
+		{
+			if (mineManager.DeleteSign(new Vector3Int(block.getLocation()))) 
+			{
+				event.getPlayer().sendMessage("[Mines] Deleted mine sign");	
+			}
+		}
+    }
 	
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) 

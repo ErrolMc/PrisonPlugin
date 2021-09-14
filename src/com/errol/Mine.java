@@ -2,11 +2,14 @@ package com.errol;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 
 class Mine
 {	
@@ -16,14 +19,18 @@ class Mine
 	public Vector3Int max;
 	public long timeBetweenResets;
 	public ArrayList<BlockChance> blockChances;
+	public ArrayList<MineSign> signs;
 	
 	// privates
+	private World world;
 	private boolean resetting;
 	private long lastResetTime;
+	private Map<String, MineSign> signPositions;
 
-	public Mine(String name) 
+	public Mine(String name, World world) 
 	{
 		this.name = name;
+		this.world = world;
 		this.min = Vector3Int.Zero();
 		this.max = Vector3Int.Zero();
 		
@@ -31,19 +38,24 @@ class Mine
 		this.timeBetweenResets = 600;
 		this.lastResetTime = Mines.seconds;
 		
+		this.signs = new ArrayList<MineSign>();
 		this.blockChances = new ArrayList<BlockChance>();
+		this.signPositions = new HashMap<String, MineSign>();
 	}
 	
-	public Mine(String name, Vector3Int min, Vector3Int max) 
+	public Mine(String name, Vector3Int min, Vector3Int max, World world) 
 	{
 		this.name = name;
+		this.world = world;
 		this.min = min;
 		this.max = max;
 		
 		this.timeBetweenResets = 600;
 		this.lastResetTime = Mines.seconds;
 		
+		this.signs = new ArrayList<MineSign>();
 		this.blockChances = new ArrayList<BlockChance>();
+		this.signPositions = new HashMap<String, MineSign>();
 	}
 	
 	public boolean CanReset() 
@@ -51,6 +63,11 @@ class Mine
 		if (resetting)
 			return false;
 		return Mines.seconds > lastResetTime + timeBetweenResets;
+	}
+	
+	public long TimeUntilReset() 
+	{
+		return (lastResetTime + timeBetweenResets) - Mines.seconds;
 	}
 	
 	public void SetDefaultChances() 
@@ -72,9 +89,14 @@ class Mine
 			Bukkit.getLogger().info("[Mines] Cant reset " + name + " as there arent any block chances");
 			return;
 		}
+		
+		if (world == null) 
+		{
+			Bukkit.getLogger().info("[Mines] World isnt linked to mine " + name);
+			return;
+		}
 			
 		resetting = true;
-		World world = Bukkit.getServer().getWorlds().get(0);
 
 		int totalBlocks = NumBlocks();
 		int blocksLeft = totalBlocks;
@@ -116,6 +138,8 @@ class Mine
 		
 		if (log)
 			Bukkit.getServer().broadcastMessage("[Mines] Mine " + name + " has been reset");
+		
+		TickSigns();
 	}
 	
 	public int NumBlocks() 
@@ -127,9 +151,37 @@ class Mine
 		return Math.abs(x) * Math.abs(y) * Math.abs(z);
 	}
 	
+	public void AddSign(SignTemplate template, Sign sign)
+	{
+		MineSign mineSign = new MineSign(sign, template);
+		signs.add(mineSign);
+		signPositions.put(mineSign.Position().toString(), mineSign);
+
+		TickSigns();
+	}
+	
+	public boolean ContainsSign(Vector3Int position) 
+	{
+		return signPositions.containsKey(position.toString());
+	}
+	
+	public boolean DeleteSign(Vector3Int position) 
+	{
+		String key = position.toString();
+		if (signPositions.containsKey(key))
+		{
+			MineSign mineSign = signPositions.get(key); 
+			if (signs.contains(mineSign)) 
+				signs.remove(mineSign);	
+			signPositions.remove(key);
+			
+			return true;
+		}
+		return false;
+	}
+	
 	public void Clear() 
 	{
-		World world = Bukkit.getServer().getWorlds().get(0);
 		for (int x = min.x; x <= max.x; x++) 
 		{
 			for (int y = min.y; y <= max.y; y++) 
@@ -141,5 +193,28 @@ class Mine
 				}
 			}
 		}
+	}
+	
+	public void Tick() 
+	{
+		if (CanReset())
+			Reset(true);
+		
+		TickSigns();
+	}
+	
+	void TickSigns() 
+	{
+		for (MineSign sign : signs) 
+		{
+			if (sign.Type() == MineSign.SignType.TimeLeft)
+				sign.UpdateTime(TimeUntilReset());
+		}
+	}
+	
+	public void Cleanup() 
+	{
+		signs.clear();
+		blockChances.clear();
 	}
 }

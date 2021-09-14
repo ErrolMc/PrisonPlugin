@@ -1,5 +1,7 @@
 package com.errol;
 
+import org.bukkit.Material;
+
 public class StaticUtils
 {
 	public static int ParseInt(String str) 
@@ -36,5 +38,10 @@ public class StaticUtils
 			// not a number
 		}
 		return -1;
+	}
+	
+	public static Boolean IsSign(Material material) 
+	{
+		return material == Material.SIGN || material == Material.SIGN_POST || material == Material.WALL_SIGN;
 	}
 }
