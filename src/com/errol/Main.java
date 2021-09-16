@@ -252,11 +252,7 @@ public class Main extends JavaPlugin implements Listener
         {
 			if (StaticUtils.IsSign(block.getType())) 
 			{
-				Sign sign = (Sign) event.getClickedBlock().getState();
-				if (sign.getLine(0).contains("test")) 
-				{
-					
-				}
+				mineManager.RightClickSign(new Vector3Int(block.getLocation()));	
 			}
         }
     }

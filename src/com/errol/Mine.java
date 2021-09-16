@@ -26,6 +26,8 @@ class Mine
 	private boolean resetting;
 	private long lastResetTime;
 	private Map<String, MineSign> signPositions;
+	
+	private static int timeBetweenSignResets = 60 * 1; // seconds
 
 	public Mine(String name, World world) 
 	{
@@ -50,6 +52,7 @@ class Mine
 		this.min = min;
 		this.max = max;
 		
+		this.resetting = false;
 		this.timeBetweenResets = 600;
 		this.lastResetTime = Mines.seconds;
 		
@@ -63,6 +66,13 @@ class Mine
 		if (resetting)
 			return false;
 		return Mines.seconds > lastResetTime + timeBetweenResets;
+	}
+	
+	public boolean CanResetFromSign() 
+	{
+		if (resetting)
+			return false;
+		return Mines.seconds > lastResetTime + timeBetweenSignResets;
 	}
 	
 	public long TimeUntilReset() 
@@ -149,6 +159,23 @@ class Mine
 		int z = max.z - min.z + 1;
 		
 		return Math.abs(x) * Math.abs(y) * Math.abs(z);
+	}
+	
+	public boolean RightClickSign(Vector3Int position) 
+	{
+		String key = position.toString();
+		if (signPositions.containsKey(key))
+		{
+			MineSign mineSign = signPositions.get(key); 
+			MineSign.SignType type = mineSign.Type();
+
+			if (CanResetFromSign())
+				Reset(true);
+
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public double PercentMined(boolean left) 

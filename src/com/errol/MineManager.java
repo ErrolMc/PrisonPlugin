@@ -209,6 +209,11 @@ public class MineManager
 		return false;
 	}
 	
+	public boolean RightClickSign(Vector3Int position) 
+	{
+		return mines.RightClickSign(position);
+	}
+	
 	public void HandleSell(Player player, String commandName, String[] args) 
 	{
 		

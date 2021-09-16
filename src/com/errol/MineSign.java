@@ -39,8 +39,7 @@ class MineSign
 			text += hours + "h";
 		if (minutes != 0)
 			text += minutes + "m";
-		if (secondsLeft != 0)
-			text += secondsLeft + "s";
+		text += secondsLeft + "s";
 		
 		template.UpdateSign(sign, "TIME", text + "");
 	}

@@ -265,6 +265,18 @@ class Mines
 		return false;
 	}
 	
+	public boolean RightClickSign(Vector3Int position) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.ContainsSign(position)) 
+			{
+				return mine.RightClickSign(position);	
+			}
+		}
+		return false;
+	}
+	
 	public void ResetAll() 
 	{
 		for (Mine mine : mines) 
