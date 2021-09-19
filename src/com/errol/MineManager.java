@@ -142,17 +142,6 @@ public class MineManager
 					player.sendMessage("Please enter a mine to delete!");
 			}
 			
-			if (args[0].equalsIgnoreCase("sell"))
-			{
-				if (args.length > 1) 
-				{
-					String name = args[1];
-					mines.SellMine(name, player);
-				}
-				else
-					player.sendMessage("Please enter a mine to sell to!");
-			}
-			
 			if (args[0].equalsIgnoreCase("addshopblock"))
 			{
 				if (args.length > 3) 
@@ -258,6 +247,19 @@ public class MineManager
 	
 	public void HandleSell(Player player, String commandName, String[] args) 
 	{
-		
+		if (commandName.equalsIgnoreCase("sell"))
+		{
+			if (args.length > 0) 
+			{
+				String name = args[0];
+				mines.SellMine(name, player);
+			}
+			else 
+			{
+				String name = mines.GetMineFromPlayer(player);
+				if (name.isEmpty() == false)
+					mines.SellMine(name, player);	
+			}
+		}
 	}
 }

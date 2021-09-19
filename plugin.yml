@@ -37,4 +37,10 @@ commands:
   mine:
     description: base command for mines
     usage: /mine
+  sell:
+    description: command for selling
+    usage: /sell
+  sellall:
+    description: command for selling all
+    usage: /sellall
    

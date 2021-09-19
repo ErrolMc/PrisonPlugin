@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -364,6 +365,16 @@ class Mines
 			}
 		}
 		return false;
+	}
+	
+	public String GetMineFromPlayer(Player player) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.ContainsPlayer(player)) 
+				return mine.name;
+		}
+		return "";
 	}
 	
 	public void ResetAll() 

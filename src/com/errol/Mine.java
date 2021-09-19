@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -224,6 +225,14 @@ class Mine
 		signPositions.put(mineSign.Position().toString(), mineSign);
 
 		TickSigns();
+	}
+	
+	public boolean ContainsPlayer(Player player) 
+	{
+		Vector3Int location = new Vector3Int(player.getLocation());
+		if (location.x >= min.x && location.x <= max.x && location.z >= min.z && location.z <= max.z)
+			return true;
+		return false;
 	}
 	
 	public boolean ContainsSign(Vector3Int position) 
