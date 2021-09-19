@@ -18,6 +18,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin implements Listener
 {
+	public static Main instance;
+	
 	public MySQL SQL;
 	public SQLGetter data;
 	public MoneyManager moneyManager;
@@ -26,6 +28,7 @@ public class Main extends JavaPlugin implements Listener
 	
 	public void onEnable() 
 	{
+		instance = this;
 		this.getServer().getPluginManager().registerEvents(this, this);
 		
 		SetupDatabase();

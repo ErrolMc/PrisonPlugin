@@ -11,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
 class Mines
@@ -106,6 +107,30 @@ class Mines
             		}
         		}	
         		
+        		if (section.contains("shop"))
+        		{
+        			ConfigurationSection shopSection = section.getConfigurationSection("shop");
+        			ConfigurationSection blocks = shopSection.getConfigurationSection("blocks");
+        			ConfigurationSection prices = shopSection.getConfigurationSection("prices");
+        			
+            		int j = 0;
+            		while (true) 
+            		{
+            			if (blocks.contains(""+j)) 
+            			{
+                			String blockName = blocks.getString(""+j);
+                			long price = prices.getLong(""+j);
+                			
+                			MineShopBlock block = new MineShopBlock(Material.valueOf(blockName), price);
+                			mine.shop.AddBlock(block);
+                			
+                			j++;
+            			}
+            			else
+            				break;
+            		}
+        		}
+        		
         		if (section.contains("signs"))
         		{
         			ConfigurationSection signs = section.getConfigurationSection("signs");
@@ -170,6 +195,21 @@ class Mines
         		}
     		}
     		
+    		if (mine.shop.blocks.size() > 0)
+    		{
+    			ConfigurationSection shopSection = section.createSection("shop");
+    			ConfigurationSection blocks = shopSection.createSection("blocks");
+    			ConfigurationSection prices = shopSection.createSection("prices");
+    			
+    			MineShop shop = mine.shop;
+    			for (int j = 0; j < shop.blocks.size(); j++) 
+    			{
+    				MineShopBlock block = shop.blocks.get(j);
+        			blocks.set(""+j, block.material.toString());
+        			prices.set(""+j, block.price);
+    			}
+    		}
+    		
     		{
     			ConfigurationSection signs = section.createSection("signs");
     			for (int j = 0; j < mine.signs.size(); j++) 
@@ -225,6 +265,55 @@ class Mines
 			{
 				mine.Reset(true);
 				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean SellMine(String name, Player player) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.name.equalsIgnoreCase(name)) 
+				return mine.Sell(player);
+		}
+		return false;
+	}
+	
+	public boolean AddBlock(String mineName, String blockName, String priceStr, Player player) 
+	{
+		long price = StaticUtils.ParseLong(priceStr);
+		if (price > 0) 
+		{
+			for (Mine mine : mines) 
+			{
+				if (mine.name.equalsIgnoreCase(mineName)) 
+				{
+					if (mine.AddBlock(blockName, price)) 
+					{
+						SaveToDisk();
+						return true;
+					}
+					player.sendMessage("[Mines] " + blockName + " already exists in " + mineName + "!");
+					return false;
+				}
+			}
+		}
+		player.sendMessage("[Mines] Price is < 0");
+		return false;
+	}
+	
+	public boolean RemoveBlock(String mineName, String block) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.name.equalsIgnoreCase(mineName)) 
+			{
+				if (mine.RemoveBlock(block)) 
+				{
+					SaveToDisk();
+					return true;
+				}
 			}
 		}
 		return false;

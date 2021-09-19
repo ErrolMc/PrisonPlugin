@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 
 class Mine
 {	
@@ -20,6 +21,7 @@ class Mine
 	public long timeBetweenResets;
 	public ArrayList<BlockChance> blockChances;
 	public ArrayList<MineSign> signs;
+	public MineShop shop;
 	
 	// privates
 	private World world;
@@ -43,6 +45,7 @@ class Mine
 		this.signs = new ArrayList<MineSign>();
 		this.blockChances = new ArrayList<BlockChance>();
 		this.signPositions = new HashMap<String, MineSign>();
+		this.shop = new MineShop(name);
 	}
 	
 	public Mine(String name, Vector3Int min, Vector3Int max, World world) 
@@ -59,20 +62,25 @@ class Mine
 		this.signs = new ArrayList<MineSign>();
 		this.blockChances = new ArrayList<BlockChance>();
 		this.signPositions = new HashMap<String, MineSign>();
+		this.shop = new MineShop(name);
 	}
 	
 	public boolean CanReset() 
 	{
 		if (resetting)
 			return false;
-		return Mines.seconds > lastResetTime + timeBetweenResets;
+		return Mines.seconds >= lastResetTime + timeBetweenResets;
 	}
 	
 	public boolean CanResetFromSign() 
 	{
 		if (resetting)
 			return false;
-		return Mines.seconds > lastResetTime + timeBetweenSignResets;
+		if (Mines.seconds < lastResetTime + timeBetweenSignResets) 
+			return false;
+		if (BlocksRemoved() == 0)
+			return false;
+		return true;
 	}
 	
 	public long TimeUntilReset() 
@@ -178,11 +186,9 @@ class Mine
 		return false;
 	}
 	
-	public double PercentMined(boolean left) 
+	public int BlocksRemoved() 
 	{
-		int totalBlocks = NumBlocks();
 		int blocksRemoved = 0;
-		
 		for (int x = min.x; x <= max.x; x++) 
 		{
 			for (int y = min.y; y <= max.y; y++) 
@@ -195,8 +201,14 @@ class Mine
 				}
 			}
 		}
+		return blocksRemoved;
+	}
+	
+	public double PercentMined(boolean left) 
+	{
+		int totalBlocks = NumBlocks();
 		
-		double percentage = (double)(totalBlocks - blocksRemoved) / (double)totalBlocks;
+		double percentage = (double)(totalBlocks - BlocksRemoved()) / (double)totalBlocks;
 		percentage *= 100;
 		percentage = (double)Math.round(percentage * 100d) / 100d;
 		
@@ -233,6 +245,21 @@ class Mine
 		}
 		return false;
 	}
+	
+	public boolean Sell(Player player) 
+	{
+		return shop.Sell(player);
+	}
+	
+	public boolean AddBlock(String blockName, long price) 
+	{
+		return shop.AddBlock(new MineShopBlock(Material.valueOf(blockName), price));
+	}	
+	
+	public boolean RemoveBlock(String blockName) 
+	{
+		return shop.RemoveBlock(blockName);
+	}	
 	
 	public void Clear() 
 	{

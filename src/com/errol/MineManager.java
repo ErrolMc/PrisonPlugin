@@ -142,6 +142,48 @@ public class MineManager
 					player.sendMessage("Please enter a mine to delete!");
 			}
 			
+			if (args[0].equalsIgnoreCase("sell"))
+			{
+				if (args.length > 1) 
+				{
+					String name = args[1];
+					mines.SellMine(name, player);
+				}
+				else
+					player.sendMessage("Please enter a mine to sell to!");
+			}
+			
+			if (args[0].equalsIgnoreCase("addshopblock"))
+			{
+				if (args.length > 3) 
+				{
+					String name = args[1];
+					String block = args[2];
+					String price = args[3];
+					
+					if (mines.AddBlock(name, block, price, player))
+						player.sendMessage("Added " + block + " to " + name + " for $" + price);
+				}
+				else
+					player.sendMessage("Please enter a mine, block, price!");
+			}
+			
+			if (args[0].equalsIgnoreCase("removeshopblock"))
+			{
+				if (args.length > 2) 
+				{
+					String name = args[1];
+					String block = args[2];
+					
+					if (mines.RemoveBlock(name, block))
+						player.sendMessage("Removed " + block + " from " + name + "!");
+					else
+						player.sendMessage("Failed to remove " + block + " from " + name + "!");
+				}
+				else
+					player.sendMessage("Please enter a mine, block!");
+			}
+			
 			if (args[0].equalsIgnoreCase("addsign")) 
 			{
 				@SuppressWarnings("deprecation")
