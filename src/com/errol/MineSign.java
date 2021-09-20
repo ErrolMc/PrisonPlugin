@@ -10,7 +10,8 @@ class MineSign
 		PercentMined,
 		PercentLeft,
 		BlocksMined,
-		TimeLeft
+		TimeLeft,
+		Sell
 	}
 	
 	private Sign sign;
@@ -20,6 +21,11 @@ class MineSign
 	{
 		this.sign = sign;
 		this.template = template;
+	}
+	
+	public void UpdateName(String name) 
+	{
+		template.UpdateSign(sign, "NAME", name);
 	}
 	
 	public void UpdatePercentage(double percentage) 

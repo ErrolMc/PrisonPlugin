@@ -62,6 +62,8 @@ class Mines
     		templateSigns.add(new SignTemplate(config.getConfigurationSection("BlocksMined"), MineSign.SignType.BlocksMined));
     	if (config.contains("TimeLeft"))
     		templateSigns.add(new SignTemplate(config.getConfigurationSection("TimeLeft"), MineSign.SignType.TimeLeft));
+    	if (config.contains("Sell"))
+    		templateSigns.add(new SignTemplate(config.getConfigurationSection("Sell"), MineSign.SignType.Sell));
     }
     
     void GetMinesFromDisk(World world) 
@@ -355,23 +357,22 @@ class Mines
 		return false;
 	}
 	
-	public boolean RightClickSign(Vector3Int position) 
+	public boolean RightClickSign(Vector3Int position, Player player) 
 	{
 		for (Mine mine : mines) 
 		{
 			if (mine.ContainsSign(position)) 
-			{
-				return mine.RightClickSign(position);	
-			}
+				return mine.RightClickSign(position, player);	
 		}
 		return false;
 	}
 	
 	public String GetMineFromPlayer(Player player) 
 	{
+		Vector3Int location = new Vector3Int(player.getLocation());
 		for (Mine mine : mines) 
 		{
-			if (mine.ContainsPlayer(player)) 
+			if (mine.ContainsPlayer(location)) 
 				return mine.name;
 		}
 		return "";

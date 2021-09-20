@@ -255,7 +255,7 @@ public class Main extends JavaPlugin implements Listener
         {
 			if (StaticUtils.IsSign(block.getType())) 
 			{
-				mineManager.RightClickSign(new Vector3Int(block.getLocation()));	
+				mineManager.RightClickSign(new Vector3Int(block.getLocation()), event.getPlayer());	
 			}
         }
     }

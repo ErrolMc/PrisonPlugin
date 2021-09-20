@@ -190,7 +190,14 @@ public class MineManager
 							String name = args[2];
 							if (type.equalsIgnoreCase("sell")) 
 							{
-								
+								player.sendMessage("sell");
+								if (mines.AddSignToMine(name, MineSign.SignType.Sell, sign)) 
+								{
+									mines.SaveToDisk();	
+									player.sendMessage("[Mines] Added " + type + " sign to " + name);
+								}
+								else 
+									player.sendMessage("[Mines] Couldnt add " + type + " sign for some reason");
 							}
 							else if (type.equalsIgnoreCase("percent")) 
 							{
@@ -200,7 +207,7 @@ public class MineManager
 									player.sendMessage("[Mines] Added " + type + " sign to " + name);
 								}
 								else 
-									player.sendMessage("[Mines] Couldnt add sign for some reason");
+									player.sendMessage("[Mines] Couldnt add " + type + " sign for some reason");
 							}
 							else if (type.equalsIgnoreCase("time")) 
 							{
@@ -210,7 +217,7 @@ public class MineManager
 									player.sendMessage("[Mines] Added " + type + " sign to " + name);
 								}
 								else 
-									player.sendMessage("[Mines] Couldnt add sign for some reason");
+									player.sendMessage("[Mines] Couldnt add " + type + " sign for some reason");
 							}
 							else
 								player.sendMessage("[Mines] Couldnt find type " + type);
@@ -240,9 +247,9 @@ public class MineManager
 		return false;
 	}
 	
-	public boolean RightClickSign(Vector3Int position) 
+	public boolean RightClickSign(Vector3Int position, Player player) 
 	{
-		return mines.RightClickSign(position);
+		return mines.RightClickSign(position, player);
 	}
 	
 	public void HandleSell(Player player, String commandName, String[] args) 
@@ -258,7 +265,9 @@ public class MineManager
 			{
 				String name = mines.GetMineFromPlayer(player);
 				if (name.isEmpty() == false)
-					mines.SellMine(name, player);	
+					mines.SellMine(name, player);
+				else
+					player.sendMessage("[Mines] You are not standing in the bounds of a mine!");
 			}
 		}
 	}

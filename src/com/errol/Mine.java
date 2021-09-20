@@ -170,7 +170,7 @@ class Mine
 		return Math.abs(x) * Math.abs(y) * Math.abs(z);
 	}
 	
-	public boolean RightClickSign(Vector3Int position) 
+	public boolean RightClickSign(Vector3Int position, Player player) 
 	{
 		String key = position.toString();
 		if (signPositions.containsKey(key))
@@ -178,8 +178,15 @@ class Mine
 			MineSign mineSign = signPositions.get(key); 
 			MineSign.SignType type = mineSign.Type();
 
-			if (CanResetFromSign())
-				Reset(true);
+			if (type == MineSign.SignType.Sell) 
+			{
+				Sell(player);
+			}
+			else 
+			{
+				if (CanResetFromSign())
+					Reset(true);	
+			}
 
 			return true;
 		}
@@ -223,13 +230,15 @@ class Mine
 		MineSign mineSign = new MineSign(sign, template);
 		signs.add(mineSign);
 		signPositions.put(mineSign.Position().toString(), mineSign);
+		
+		if (mineSign.Type() == MineSign.SignType.Sell)
+			mineSign.UpdateName(name);
 
 		TickSigns();
 	}
 	
-	public boolean ContainsPlayer(Player player) 
+	public boolean ContainsPlayer(Vector3Int location) 
 	{
-		Vector3Int location = new Vector3Int(player.getLocation());
 		if (location.x >= min.x && location.x <= max.x && location.z >= min.z && location.z <= max.z)
 			return true;
 		return false;
