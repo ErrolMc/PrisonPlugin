@@ -6,8 +6,14 @@ import java.util.HashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.event.inventory.*;
 
 public class MineShop
 {
@@ -99,5 +105,27 @@ public class MineShop
 		}
 
 		return false;
+	}
+	
+	public void ShowItemsToPlayer(Player player) 
+	{
+		Inventory inv = Bukkit.getServer().createInventory(player, 18);
+		for (int i = 0; i < blocks.size(); i++)
+		{
+			MineShopBlock shopBlock = blocks.get(i);
+			ItemStack stack = new ItemStack(shopBlock.material, 1);
+
+			ArrayList<String> lore = new ArrayList<String>();
+			lore.add("Sell 1 for $" + shopBlock.price);
+			lore.add("Sell 64 for $" + (shopBlock.price * 64));
+			
+			ItemMeta meta = stack.getItemMeta();
+			meta.setLore(lore);
+			stack.setItemMeta(meta);
+			
+			inv.setItem(i, stack);
+		}
+		
+		player.openInventory(inv);
 	}
 }

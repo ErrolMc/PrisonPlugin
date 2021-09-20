@@ -247,9 +247,9 @@ public class MineManager
 		return false;
 	}
 	
-	public boolean RightClickSign(Vector3Int position, Player player) 
+	public boolean ClickSign(Vector3Int position, Player player, boolean right) 
 	{
-		return mines.RightClickSign(position, player);
+		return mines.ClickSign(position, player, right);
 	}
 	
 	public void HandleSell(Player player, String commandName, String[] args) 

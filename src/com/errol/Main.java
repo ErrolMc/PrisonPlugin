@@ -251,13 +251,14 @@ public class Main extends JavaPlugin implements Listener
     public void onPlayerClickSign(PlayerInteractEvent event) 
     {
     	Block block = event.getClickedBlock();
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) 
-        {
-			if (StaticUtils.IsSign(block.getType())) 
-			{
-				mineManager.RightClickSign(new Vector3Int(block.getLocation()), event.getPlayer());	
-			}
-        }
+    	Action action = event.getAction();
+    	if (action == Action.RIGHT_CLICK_BLOCK || action == Action.LEFT_CLICK_BLOCK) 
+    	{
+    		if (StaticUtils.IsSign(block.getType())) 
+    		{
+    			mineManager.ClickSign(new Vector3Int(block.getLocation()), event.getPlayer(), action == Action.RIGHT_CLICK_BLOCK);
+    		}
+    	}
     }
     
     @EventHandler

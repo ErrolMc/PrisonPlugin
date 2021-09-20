@@ -357,12 +357,12 @@ class Mines
 		return false;
 	}
 	
-	public boolean RightClickSign(Vector3Int position, Player player) 
+	public boolean ClickSign(Vector3Int position, Player player, boolean right) 
 	{
 		for (Mine mine : mines) 
 		{
 			if (mine.ContainsSign(position)) 
-				return mine.RightClickSign(position, player);	
+				return mine.ClickSign(position, player, right);	
 		}
 		return false;
 	}
