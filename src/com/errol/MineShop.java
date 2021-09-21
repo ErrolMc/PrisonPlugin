@@ -109,7 +109,7 @@ public class MineShop
 	
 	public void ShowItemsToPlayer(Player player) 
 	{
-		Inventory inv = Bukkit.getServer().createInventory(player, 18, "Mine Shop");
+		Inventory inv = Bukkit.getServer().createInventory(player, 18, "Mine Shop (" + name + ")");
 		for (int i = 0; i < blocks.size(); i++)
 		{
 			MineShopBlock shopBlock = blocks.get(i);

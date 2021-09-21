@@ -285,9 +285,17 @@ public class Main extends JavaPlugin implements Listener
         Inventory inv = event.getInventory();
         String title = inv.getTitle();
         
-        if (title.equals("Mine Shop")) 
+        if (title.startsWith("Mine Shop"))  
         {
-            event.setCancelled(true);
+        	int startInd = title.indexOf('(');
+        	int endInd = title.indexOf(')');
+        	
+        	if (startInd != -1 && endInd != -1) 
+        	{
+        		String mineName = title.substring(startInd+1, endInd);
+        		
+        		event.setCancelled(true);
+        	}
         }
     }
 
