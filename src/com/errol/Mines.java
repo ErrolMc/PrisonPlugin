@@ -13,6 +13,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.scheduler.BukkitScheduler;
 
 class Mines
@@ -376,6 +377,16 @@ class Mines
 				return mine.name;
 		}
 		return "";
+	}
+	
+	public boolean ClickShopItem(String mineName, InventoryClickEvent event) 
+	{
+		for (Mine mine : mines) 
+		{
+			if (mine.name.equalsIgnoreCase(mineName)) 
+				mine.ClickShopItem(event);
+		}
+		return false;
 	}
 	
 	public void ResetAll() 

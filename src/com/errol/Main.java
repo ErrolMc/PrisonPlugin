@@ -281,7 +281,6 @@ public class Main extends JavaPlugin implements Listener
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) 
     {
-        Player player = (Player)event.getWhoClicked();
         Inventory inv = event.getInventory();
         String title = inv.getTitle();
         
@@ -293,8 +292,9 @@ public class Main extends JavaPlugin implements Listener
         	if (startInd != -1 && endInd != -1) 
         	{
         		String mineName = title.substring(startInd+1, endInd);
-        		
-        		event.setCancelled(true);
+        		boolean res = mineManager.ClickShopItem(mineName, event);
+        		if (!res)
+        			event.setCancelled(true);
         	}
         }
     }

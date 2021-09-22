@@ -12,6 +12,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 
 class Mine
 {	
@@ -275,6 +276,11 @@ class Mine
 			return true;
 		}
 		return false;
+	}
+	
+	public boolean ClickShopItem(InventoryClickEvent event) 
+	{
+		return shop.ClickItem(event);
 	}
 	
 	public boolean Sell(Player player) 

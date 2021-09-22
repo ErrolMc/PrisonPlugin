@@ -4,7 +4,7 @@ import java.util.HashSet;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -250,6 +250,11 @@ public class MineManager
 	public boolean ClickSign(Vector3Int position, Player player, boolean right) 
 	{
 		return mines.ClickSign(position, player, right);
+	}
+	
+	public boolean ClickShopItem(String mineName, InventoryClickEvent event) 
+	{
+		return mines.ClickShopItem(mineName, event);
 	}
 	
 	public void HandleSell(Player player, String commandName, String[] args) 

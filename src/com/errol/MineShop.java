@@ -71,6 +71,7 @@ public class MineShop
 			int itemsSold = 0;
 			
 			PlayerInventory inventory = player.getInventory();
+			int index = 0;
 			for (ItemStack stack : inventory) 
 			{
 				if (stack != null) 
@@ -85,9 +86,10 @@ public class MineShop
 						moneyGained += money;
 						itemsSold += amount;
 						
-						inventory.remove(stack);
+						inventory.setItem(index, new ItemStack(Material.AIR));
 					}	
 				}
+				index++;
 			}
 			
 			if (moneyGained > 0) 
@@ -104,6 +106,44 @@ public class MineShop
 			player.sendMessage("[Mines] " + name + " doesnt have a shop!");
 		}
 
+		return false;
+	}
+	
+	public boolean SellSingleItem(Player player, Material mat) 
+	{
+		if (blockMap.containsKey(mat.toString())) 
+		{
+			MineShopBlock shopBlock = blockMap.get(mat.toString());
+			
+			long moneyGained = 0;
+			int itemsSold = 0;
+			
+			PlayerInventory inventory = player.getInventory();
+			for (ItemStack stack : inventory) 
+			{
+				if (stack != null && stack.getType() == mat) 
+				{
+					int amount = stack.getAmount();
+					long money = shopBlock.price * amount;
+					moneyGained += money;
+					itemsSold += amount;
+				}
+			}	
+			
+			inventory.remove(mat);
+			
+			if (moneyGained > 0) 
+			{
+				player.sendMessage("[Mines] Sold " + itemsSold + " " + mat + " for $" + moneyGained + " to " + name + "!");
+				Main.instance.moneyManager.AddMoney(player.getUniqueId(), moneyGained);	
+				return true;
+			}
+
+			player.sendMessage("[Mines] You dont have any " + mat + " to sell to " + name + "!");
+		}
+		else
+			player.sendMessage("[Mines] Error while trying to sell " + mat + " to " + name);
+		
 		return false;
 	}
 	
@@ -127,5 +167,18 @@ public class MineShop
 		}
 		
 		player.openInventory(inv);
+	}
+	
+	public boolean ClickItem(InventoryClickEvent event) 
+	{
+        Player player = (Player)event.getWhoClicked();
+        ItemStack item = event.getCurrentItem();
+        if (item != null) 
+        {
+        	Material mat = item.getType();
+        	if (blockMap.containsKey(mat.toString())) 
+        		SellSingleItem(player, mat);
+        }
+		return false;
 	}
 }
