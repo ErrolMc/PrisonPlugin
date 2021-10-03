@@ -1,8 +1,8 @@
-package com.errol;
+package com.errol.utils;
 
 import org.bukkit.Location;
 
-class Vector3Int
+public class Vector3Int
 {
 	public int x;
 	public int y;

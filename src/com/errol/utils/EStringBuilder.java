@@ -1,4 +1,4 @@
-package com.errol;
+package com.errol.utils;
 
 public class EStringBuilder
 {

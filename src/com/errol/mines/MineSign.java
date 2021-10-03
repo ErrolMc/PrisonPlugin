@@ -1,9 +1,9 @@
-package com.errol;
+package com.errol.mines;
 
-import org.bukkit.Bukkit;
 import org.bukkit.block.Sign;
+import com.errol.utils.Vector3Int;
 
-class MineSign
+public class MineSign
 {	
 	public enum SignType
 	{

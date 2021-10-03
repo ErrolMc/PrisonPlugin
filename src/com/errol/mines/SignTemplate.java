@@ -1,6 +1,5 @@
-package com.errol;
+package com.errol.mines;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;

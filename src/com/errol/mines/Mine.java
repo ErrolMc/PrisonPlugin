@@ -1,4 +1,6 @@
-package com.errol;
+package com.errol.mines;
+
+import com.errol.utils.Vector3Int;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;

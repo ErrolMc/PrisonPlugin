@@ -1,11 +1,10 @@
-package com.errol;
+package com.errol.mines;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -15,6 +14,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.scheduler.BukkitScheduler;
+
+import com.errol.Main;
+import com.errol.utils.*;
 
 class Mines
 {

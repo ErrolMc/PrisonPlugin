@@ -1,4 +1,4 @@
-package com.errol;
+package com.errol.mines;
 
 import java.util.HashSet;
 
@@ -9,6 +9,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 
+import com.errol.Main;
+import com.errol.utils.*;
 import com.sk89q.worldedit.bukkit.*;
 import com.sk89q.worldedit.bukkit.selections.*;
 

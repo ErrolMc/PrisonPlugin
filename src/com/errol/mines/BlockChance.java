@@ -1,4 +1,4 @@
-package com.errol;
+package com.errol.mines;
 
 import org.bukkit.Material;
 
