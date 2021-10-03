@@ -116,16 +116,19 @@ public class RankManager
     public void TryRankup(Player player) 
     {
     	Rank rank = GetRank(player);
+    	Prestige prestige = GetPrestige(player);
     	Rank next = NextRank(rank);
+    	
     	long money = plugin.moneyManager.GetMoney(player.getUniqueId());
-
+    	long cost = (long)(next.cost * prestige.multiplier);
+    	
     	if (rank.max)
     	{
     		player.sendMessage("You cannot rankup because you are the max rank!");
     	}
-    	else if (money >= next.cost)
+    	else if (money >= cost)
     	{
-    		plugin.moneyManager.TakeMoney(player.getUniqueId(), next.cost);
+    		plugin.moneyManager.TakeMoney(player.getUniqueId(), cost);
     		if (perms.playerInGroup(player, rank.tag))
     			perms.playerRemoveGroup(player, rank.tag);
     		perms.playerAddGroup(player, next.tag);
@@ -134,7 +137,7 @@ public class RankManager
     	} 
     	else 
     	{
-    		long diff = next.cost - money;
+    		long diff = cost - money;
     		player.sendMessage("You need " + diff + " to rank up from " + rank.tag + " to " + next.tag);
     	}
     }
@@ -182,9 +185,12 @@ public class RankManager
     public void LogRank(Player player) 
     {
     	Rank rank = GetRank(player);
+    	Prestige prestige = GetPrestige(player);
     	Rank next = NextRank(rank);
+    	
     	long money = plugin.moneyManager.GetMoney(player.getUniqueId());
-    	long diff = next.cost - money;
+    	long cost = (long)(next.cost * prestige.multiplier);
+    	long diff = cost - money;
 
     	if (rank.max)
     		player.sendMessage("You are the max rank! (" + rank.tag + ")");
