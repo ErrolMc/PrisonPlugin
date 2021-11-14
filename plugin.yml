@@ -43,4 +43,7 @@ commands:
   sellall:
     description: command for selling all
     usage: /sellall
+  enchant:
+    description: command for enchanting
+    usage: /enchant
    

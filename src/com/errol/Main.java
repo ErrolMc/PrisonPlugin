@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.errol.enchant.EnchantManager;
 import com.errol.mines.*;
 import com.errol.utils.*;
 
@@ -29,6 +30,7 @@ public class Main extends JavaPlugin implements Listener
 	public MoneyManager moneyManager;
 	public RankManager rankManager;
 	public MineManager mineManager;
+	public EnchantManager enchantManager;
 	
 	public void onEnable() 
 	{
@@ -45,6 +47,7 @@ public class Main extends JavaPlugin implements Listener
 		moneyManager = new MoneyManager(this);
 		rankManager = new RankManager(this);
 		mineManager = new MineManager(this);
+		enchantManager = new EnchantManager(this);
 		
 		try {
 			SQL.Connect();
@@ -245,6 +248,12 @@ public class Main extends JavaPlugin implements Listener
 		if (commandName.equals("sell") || commandName.equals("sellall")) 
 		{
 			mineManager.HandleSell(Bukkit.getPlayer(sender.getName()), commandName, args);
+			return true;
+		}
+		
+		if (commandName.equals("enchant")) 
+		{
+			enchantManager.HandleCommand(Bukkit.getPlayer(sender.getName()), args);
 			return true;
 		}
 		
